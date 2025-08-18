@@ -1,0 +1,35 @@
+name: "CD-Build"
+env:
+  deploy-version: "ver-${{ github.sha }}"
+
+on:
+  workflow_dispatch: {}
+  repository_dispatch:
+    types: [trigger-workflow]
+  workflow_call: {}
+  schedule:
+    - cron: "0 23  1 * *"
+  pull_request:
+    types:
+      - opened
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  ingress-egress:
+    uses: ./.github/workflows/ingress-egress.yml
+    secrets: inherit
+    permissions: write-all
+  ingress-inspection:
+    needs: [ingress-egress]
+    uses: ./.github/workflows/ingress-inspection.yml
+    secrets: inherit
+    permissions: write-all
+  ingress-inspection-custom-firewall:
+    needs: [ingress-inspection]
+    uses: ./.github/workflows/ingress-inspection-custom-firewall.yml
+    secrets: inherit
+    permissions: write-all

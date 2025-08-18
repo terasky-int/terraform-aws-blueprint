@@ -148,9 +148,7 @@ module "gwlb" {
 
 module "endpoint_vpc" {
   # source = "git@github.com:terasky-int/terraform-aws-vpc.git?ref=v1.3"
-  # source = "git@github.com:terasky-int/terraform-aws-vpc.git"
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0"
+  source = "git@github.com:terasky-int/terraform-aws-static-modules.git//terraform-aws-vpc.git"
 
   vpc_name = local.endpoint_vpc_name
   vpc_cidr = var.endpoint_vpc_cidr

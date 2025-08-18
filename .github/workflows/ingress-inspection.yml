@@ -1,0 +1,253 @@
+name: "Ingress-with-Inspection"
+env:
+  deploy-version: "ver-${{ github.sha }}"
+  TF_CLOUD_ORGANIZATION: ${{ vars.CUSTOM_TF_CLOUD_ORGANIZATION != '' && vars.TF_CLOUD_ORGANIZATION_NAME || vars.CUSTOM_TF_CLOUD_ORGANIZATION }}
+
+on:
+  workflow_call: {}
+  workflow_dispatch:
+    inputs:
+      Clean:
+        description: "Destroy When Finish"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  Deploy-hub:
+    runs-on: ubuntu-latest
+    outputs:
+      main_tgw_rt_id: ${{steps.main_tgw_rt_id.outputs.TF_VAR_tgw_route_table_id}}
+      tgw_spoke_rt_id: ${{steps.tgw_spoke_rt_id.outputs.TF_VAR_tgw_spoke_rt_id}}
+    env:
+      TF_WORKSPACE: ${{vars.CUSTOM_HUB_INGRESS_INSPECTION != '' && vars.HUB_INGRESS_INSPECTION || vars.CUSTOM_HUB_INGRESS_INSPECTION}}
+    steps:
+      # Download your TF LZ Blueprint code
+      - uses: actions/checkout@v3
+        name: Checkout source code
+      - uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: |
+            ${{ secrets.SSH_TERRAFORM_AWS_CENTRALIZED_VPC_ENDPOINT }}
+            ${{ secrets.SSH_TERRAFORM_AWS_GWLB }}
+            ${{ secrets.SSH_TERRAFORM_AWS_TGW }}
+            ${{ secrets.SSH_TERRAFORM_AWS_TGW_RT_ASSOCIATION }}
+            ${{ secrets.SSH_TERRAFORM_AWS_UPDATE_INSPECTION_RTS }}
+            ${{ secrets.SSH_TERRAFORM_AWS_VPC }}
+            ${{ secrets.SSH_TERRAFORM_AWS_VPC_FLOW_LOGS_BUCKET }}
+            ${{ secrets.SSH_TERRAFORM_AWS_NETWORK_FIREWALL_VPC }}
+            ${{ secrets.SSH_TERRAFORM_AWS_UPDATE_RT }}
+      - name: Find Organization and Workspace References in Provider Configuration block
+        run: |
+          strings=( "organization = *" "workspaces {" )  # Replace with your desired strings
+            for string in "${strings[@]}"; do
+              if grep -r "$string" ./*.tf; then
+                echo "String '$string' found in Terraform code!"
+                exit 1
+              fi
+            done
+            echo "No matching Organization or Workspaces found in Terraform code."
+
+      # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_wrapper: false
+
+      # Terraform Init
+      - name: Terraform Init
+        run: terraform init
+
+      # Terraform Apply
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+      - name: Output TGW Toute Table ID
+        id: main_tgw_rt_id
+        run: echo TF_VAR_tgw_route_table_id=$(terraform output tgw_hub_route_table_id) >> $GITHUB_OUTPUT
+      - name: Output TGW TGW Spoke RT ID
+        id: spoke_tgw_rt_id
+        run: echo TF_VAR_tgw_spoke_rt_id=$(terraform output tgw_spoke_route_table_id) >> $GITHUB_OUTPUT
+
+  Deploy-spoke:
+    needs: [Deploy-hub]
+    runs-on: ubuntu-latest
+    env:
+      TF_WORKSPACE: ${{vars.CUSTOM_SPOKE_INGRESS_INSPECTION != '' && vars.SPOKE_INGRESS_INSPECTION || vars.CUSTOM_SPOKE_INGRESS_INSPECTION}}
+    steps:
+      # Clean build folder
+      - name: Clean folder
+        run: rm -rf ./.??* || true
+      # Download your TF LZ Blueprint code
+      - uses: actions/checkout@v4
+        with:
+          repository: terasky-int/terraform-aws-lz-blueprint-workload
+          token: ${{secrets.TERRAFORM_AWS_BLUEPRINT_WORKLOAD}}
+
+        name: Checkout source code
+      - uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: |
+            ${{ secrets.SSH_TERRAFORM_AWS_CENTRALIZED_VPC_ENDPOINT }}
+            ${{ secrets.SSH_TERRAFORM_AWS_GWLB }}
+            ${{ secrets.SSH_TERRAFORM_AWS_RESOURCE_SHARING }}
+            ${{ secrets.SSH_TERRAFORM_AWS_TGW }}
+            ${{ secrets.SSH_TERRAFORM_AWS_TGW_RT_ASSOCIATION }}
+            ${{ secrets.SSH_TERRAFORM_AWS_UPDATE_INSPECTION_RTS }}
+            ${{ secrets.SSH_TERRAFORM_AWS_VPC }}
+            ${{ secrets.SSH_TERRAFORM_AWS_VPC_FLOW_LOGS_BUCKET }}
+            ${{ secrets.SSH_TERRAFORM_AWS_NETWORK_FIREWALL_VPC }}
+            ${{ secrets.SSH_TERRAFORM_AWS_UPDATE_RT }}
+      - name: Find Organization and Workspace References in Provider Configuration block
+        run: |
+          strings=( "organization = *" "workspaces {" )  # Replace with your desired strings
+            for string in "${strings[@]}"; do
+              if grep -r "$string" ./*.tf; then
+                echo "String '$string' found in Terraform code!"
+                exit 1
+              fi
+            done
+            echo "No matching Organization or Workspaces found in Terraform code."
+
+      # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+      # Terraform Init
+      - name: Export Variables
+        env:
+          TF_VAR_tgw_route_table_id: ${{ needs.Deploy-hub.outputs.main_tgw_rt_id }}
+          TF_VAR_tgw_spoke_rt_id: ${{ needs.Deploy-hub.outputs.tgw_spoke_rt_id }}
+        run: |
+          echo "TF_VAR_tgw_route_table_id=${{env.TF_VAR_tgw_route_table_id}}" >> $GITHUB_ENV
+          echo "TF_VAR_tgw_spoke_rt_id=${{env.TF_VAR_tgw_spoke_rt_id}}" >> $GITHUB_ENV
+      - name: Terraform Init
+        run: terraform init
+
+      # Apply to Production your code
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+
+  Share-Resources:
+    needs: [Deploy-spoke]
+    runs-on: ubuntu-latest
+    env:
+      TF_WORKSPACE: ${{vars.CUSTOM_SHARE_RESOURCE_INGRESS_INSPECTION != '' && vars.SHARE_RESOURCE_INGRESS_INSPECTION || vars.CUSTOM_SHARE_RESOURCE_INGRESS_INSPECTION}}
+    steps:
+      # Clean build folder
+      - name: Clean folder
+        run: rm -rf ./.??* || true
+      # Download your TF LZ Blueprint code
+      - uses: actions/checkout@v4
+        with:
+          repository: terasky-int/terraform-aws-resources-sharing
+          token: ${{secrets.TERRAFORM_AWS_BLUEPRINT_WORKLOAD}}
+      # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+      - name: Terraform Setup
+        uses: hashicorp/setup-terraform@v2
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+      - name: Find Organization and Workspace References in Provider Configuration block
+        run: |
+          strings=( "organization = *" "workspaces {" )  # Replace with your desired strings
+            for string in "${strings[@]}"; do
+              if grep -r "$string" ./*.tf; then
+                echo "String '$string' found in Terraform code!"
+                exit 1
+              fi
+            done
+            echo "No matching Organization or Workspaces found in Terraform code."
+      # Terraform Init
+      - name: Terraform Init
+        run: terraform init
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+
+  Clean-Up-Resources:
+    needs: [Deploy-hub, Share-Resources]
+    # if: ${{ github.event.inputs.Clean == 'true' }} || ${{ github.event_name == 'pull_request' }} || ${{ github.event_name == 'push' }} || ${{ github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event.inputs.Clean == 'true' }} || ${{ github.event_name == 'pull_request' }} || ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    env:
+      TF_VAR_tgw_route_table_id: ${{ needs.Deploy-hub.outputs.main_tgw_rt_id }}
+      TF_VAR_tgw_spoke_rt_id: ${{needs.Deploy-hub.outputs.tgw_spoke_rt_id}}
+    steps:
+      - name: Configure SSH agent
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: |
+            ${{ secrets.SSH_TERRAFORM_AWS_CENTRALIZED_VPC_ENDPOINT }}
+            ${{ secrets.SSH_TERRAFORM_AWS_GWLB }}
+            ${{ secrets.SSH_TERRAFORM_AWS_RESOURCE_SHARING }}
+            ${{ secrets.SSH_TERRAFORM_AWS_TGW }}
+            ${{ secrets.SSH_TERRAFORM_AWS_TGW_RT_ASSOCIATION }}
+            ${{ secrets.SSH_TERRAFORM_AWS_UPDATE_INSPECTION_RTS }}
+            ${{ secrets.SSH_TERRAFORM_AWS_VPC }}
+            ${{ secrets.SSH_TERRAFORM_AWS_VPC_FLOW_LOGS_BUCKET }}
+            ${{ secrets.SSH_TERRAFORM_AWS_NETWORK_FIREWALL_VPC }}
+            ${{ secrets.SSH_TERRAFORM_AWS_UPDATE_RT }}
+      # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+      - name: Terraform Setup
+        uses: hashicorp/setup-terraform@v2
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      # Destroy Resource Sharing
+      # Clean up resources
+      - name: Clean folder
+        run: rm -rf ./.??* || true
+      # Download your TF LZ Blueprint code
+      - uses: actions/checkout@v4
+        with:
+          repository: terasky-int/terraform-aws-resources-sharing
+          token: ${{secrets.TERRAFORM_AWS_BLUEPRINT_WORKLOAD}}
+      # Terraform Init
+      - name: Destroy Share Resource
+        env:
+          TF_WORKSPACE: ${{vars.CUSTOM_SHARE_RESOURCE_INGRESS_INSPECTION != '' && vars.SHARE_RESOURCE_INGRESS_INSPECTION || vars.CUSTOM_SHARE_RESOURCE_INGRESS_INSPECTION}}
+        run: |
+          echo "TFC Workspace Name $TF_WORKSPACE"
+          terraform init
+          terraform plan
+          terraform destroy -auto-approve
+
+      # Destroy SPOKE Workload
+      # Clean build folder
+      - name: Clean folder
+        run: rm -rf ./.??* || true
+      # Download your TF LZ Blueprint code
+      - uses: actions/checkout@v4
+        with:
+          repository: terasky-int/terraform-aws-lz-blueprint-workload
+          token: ${{secrets.TERRAFORM_AWS_BLUEPRINT_WORKLOAD}}
+          # Terraform Init
+      - name: Destroy Spoke Workload
+        env:
+          TF_WORKSPACE: ${{vars.CUSTOM_SPOKE_INGRESS_INSPECTION != '' && vars.SPOKE_INGRESS_INSPECTION || vars.CUSTOM_SPOKE_INGRESS_INSPECTION}}
+        run: |
+          echo "TF WORKSPACE Name $TF_WORKSPACE"
+          echo "TF_VAR_tgw_route_table_id=${{env.TF_VAR_tgw_route_table_id}}" >> $GITHUB_ENV
+          echo "TF_VAR_tgw_spoke_rt_id=${{env.TF_VAR_tgw_spoke_rt_id}}" >> $GITHUB_ENV
+          terraform init
+          terraform plan
+          terraform destroy -auto-approve
+
+      # Destroy HUB
+      # Clean build folder
+      - name: Clean folder
+        run: rm -rf ./.??* || true
+      # Download your TF LZ Blueprint code
+      - uses: actions/checkout@v3
+        name: Checkout source code
+      - name: Destroy HUB
+        env:
+          TF_WORKSPACE: ${{vars.CUSTOM_HUB_INGRESS_INSPECTION != '' && vars.HUB_INGRESS_INSPECTION || vars.CUSTOM_HUB_INGRESS_INSPECTION}}
+        run: |
+          echo "TF WORKSPACE Name $TF_WORKSPACE"
+          terraform init
+          terraform plan
+          terraform destroy -auto-approve
