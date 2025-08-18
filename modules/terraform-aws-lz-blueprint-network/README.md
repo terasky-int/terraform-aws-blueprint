@@ -1,5 +1,3 @@
-[![CD-Build](https://github.com/terasky-int/terraform-aws-lz-network-hub-module/actions/workflows/build.yml/badge.svg?branch=main&event=pull_request_target)](https://github.com/terasky-int/terraform-aws-lz-network-hub-module/actions/workflows/build.yml)
-
 # Terraform-AWS-LZ-Blueprint-Network
 This TF module creates the resources for the Network account in the AWS LZ Hub &amp; Spoke model. That includes the Ingress, Egress, Endpoint VPCs; with an option for Inspection VPC with a FW (AWS NFW or Vendor FW with GWLB)
 
