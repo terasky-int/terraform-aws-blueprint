@@ -51,3 +51,13 @@ module "aws-public-workload" {
     environment = var.environment
     enable_flow_log = var.enable_flow_log
 }
+
+module "aws-resource-shareing" {
+    source = "./modules/terraform-aws-resources-sharing"
+
+    aws_region = var.aws_region
+    environment = var.environment
+    public_workload = var.public_workload
+    network_account = = var.network_account
+    destination_account = var.destination_account
+}

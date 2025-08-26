@@ -649,3 +649,19 @@ variable "public_subnet_cidrs" {
   type        = list(string)
   default     = []
 }
+
+variable "destination_account" {
+  description = "AWS account ID to share the networking resource with"
+  type        = string
+}
+
+variable "network_account" {
+  description = "AWS account ID to share the networking resource with"
+  type        = string
+}
+
+variable "public_workload" {
+  description = "Whether the VPC has public subnets and Internet Gateway"
+  type        = bool
+  #  default     = null
+}
