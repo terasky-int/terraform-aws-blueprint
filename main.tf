@@ -1,11 +1,17 @@
 module "network_hub" {
   source = "./modules/network-hub"
 
+  # Explicitly pass the aliased "networking" provider to this module.
+  providers = {
+    aws = aws.networking
+  }
+
   # General Settings
   aws_region       = var.aws_region
   environment      = var.environment
   account_name     = var.account_name
   assume_role_name = var.assume_role_name
+  enable_flow_log  = var.enable_flow_log
 
   # VPC CIDR Blocks
   inspection_vpc_cidr     = var.inspection_vpc_cidr
@@ -65,14 +71,34 @@ module "network_hub" {
   on_prem_dns_server_ip = var.on_prem_dns_server_ip
 }
 
+module "s3_logs_network_firewall" {
+  source = "./modules/network-logs"
+
+  providers = {
+    aws = aws.logging
+  }
+
+  aws_region       = var.aws_region
+  account_name     = "logging"
+  assume_role_name = var.assume_role_name
+  environment      = var.environment
+  enable_flow_log  = var.enable_flow_log
+  s3_bucket_name   = var.s3_bucket_name
+}
+
 module "network_workload" {
   source   = "./modules/network-workload"
   for_each = var.workload_vpcs
 
+  # Explicitly pass the aliased "networking" provider to this module.
+  providers = {
+    aws = aws.networking
+  }
+
   # General Settings
-  aws_region   = var.aws_region
-  environment  = var.environment
-  account_name = var.account_name
+  environment     = each.value.environment
+  account_name    = var.account_name # The "owner" account is still the hub
+  enable_flow_log = var.enable_flow_log
 
   # VPC Settings from the map
   workload_vpc_name             = each.value.name
@@ -81,7 +107,8 @@ module "network_workload" {
   workload_private_subnets_cidr = each.value.private_subnets_cidr
   workload_tgw_subnets_cidr     = each.value.tgw_subnets_cidr
 
-  # TGW Attachment Settings
-  tgw_id                   = module.network_hub.tgw_id
-  spoke_tgw_route_table_id = module.network_hub.spoke_tgw_route_table_id
+  # TGW Attachment & VPC Sharing Settings
+  tgw_id                   = var.create_tgw ? module.network_hub.tgw_id : null
+  spoke_tgw_route_table_id = var.create_tgw ? module.network_hub.spoke_tgw_route_table_id : null
+  share_with_account_ids   = each.value.share_with_account_ids
 }

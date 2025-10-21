@@ -48,6 +48,8 @@ module "inspection_vpc" {
   tags                 = { Terraform = "true", Environment = "inspection" }
   database_subnet_tags = { Name = "tgw-subnet" }
   intra_subnet_tags    = { Name = "firewall-subnet" }
+
+  enable_flow_log = var.enable_flow_log
 }
 
 module "egress_vpc" {
@@ -68,6 +70,8 @@ module "egress_vpc" {
 
   tags                = { Terraform = "true", Environment = "egress" }
   private_subnet_tags = { Name = "tgw-subnet" }
+
+  enable_flow_log = var.enable_flow_log
 }
 
 module "ingress_vpc" {
@@ -86,6 +90,8 @@ module "ingress_vpc" {
 
   tags                = { Terraform = "true", Environment = "ingress" }
   private_subnet_tags = { Name = "tgw-subnet" }
+
+  enable_flow_log = var.enable_flow_log
 }
 
 module "endpoint_vpc" {
@@ -104,6 +110,8 @@ module "endpoint_vpc" {
 
   tags                = { Terraform = "true", Environment = "endpoint" }
   private_subnet_tags = { Name = "tgw-subnet" }
+
+  enable_flow_log = var.enable_flow_log
 }
 
 module "firewall_tools_vpc" {
@@ -122,6 +130,8 @@ module "firewall_tools_vpc" {
 
   tags                = { Terraform = "true", Environment = "firewall-tools" }
   private_subnet_tags = { Name = "tgw-subnet" }
+
+  enable_flow_log = var.enable_flow_log
 }
 
 
@@ -217,6 +227,8 @@ resource "aws_ec2_transit_gateway_route_table_association" "inspection" {
   count                          = var.create_tgw && var.create_inspection ? 1 : 0
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.inspection[0].id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.inspection[0].id
+
+  depends_on = [ aws_ec2_transit_gateway_vpc_attachment.inspection ]
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "egress" {
@@ -234,6 +246,8 @@ resource "aws_ec2_transit_gateway_route_table_association" "egress" {
   count                          = var.create_tgw && var.create_egress_vpc ? 1 : 0
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.egress[0].id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke[0].id # Associate with spoke RT to receive traffic
+
+  depends_on = [ aws_ec2_transit_gateway_vpc_attachment.egress ]
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "ingress" {
@@ -251,6 +265,8 @@ resource "aws_ec2_transit_gateway_route_table_association" "ingress" {
   count                          = var.create_tgw && var.create_ingress_vpc ? 1 : 0
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.ingress[0].id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke[0].id # Also associate with spoke RT
+
+  depends_on = [ aws_ec2_transit_gateway_vpc_attachment.ingress ]
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "endpoint" {
@@ -268,6 +284,8 @@ resource "aws_ec2_transit_gateway_route_table_association" "endpoint" {
   count                          = var.create_tgw && var.create_endpoint_vpc ? 1 : 0
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.endpoint[0].id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke[0].id # Also associate with spoke RT
+
+  depends_on = [ aws_ec2_transit_gateway_vpc_attachment.endpoint ]
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "firewall_tools" {
@@ -285,6 +303,8 @@ resource "aws_ec2_transit_gateway_route_table_association" "firewall_tools" {
   count                          = var.create_tgw && var.create_firewall_tools_vpc ? 1 : 0
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.firewall_tools[0].id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.spoke[0].id # Also associate with spoke RT
+
+  depends_on = [ aws_ec2_transit_gateway_vpc_attachment.firewall_tools ]
 }
 
 

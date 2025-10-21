@@ -19,6 +19,17 @@ variable "assume_role_name" {
   default     = "TerraformExecutionRole"
 }
 
+variable "enable_flow_log" {
+  description = "Whether or not to enable VPC Flow Logs"
+  type        = bool
+}
+
+variable "s3_bucket_name" {
+  description = "Central S3 for all network logs usch as vpc flow logs, aws network firewall logs and etc"
+  type        = string
+  default     = ""
+}
+
 variable "inspection_vpc_name" {
   description = "The specific name for the Inspection VPC."
   type        = string

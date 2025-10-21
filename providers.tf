@@ -7,39 +7,43 @@ terraform {
   }
 }
 
-# Default provider for initial authentication and data source lookup.
-# It uses the credentials configured in your environment.
-provider "aws" {
-  region = var.aws_region
-}
-
-data "aws_caller_identity" "current" {}
-
 # Configure the AWS Provider
+# Default provider for the Hub account (where TGW and other central resources reside).
 provider "aws" {
-  alias  = "assumed_role"
   region = var.aws_region
 
   dynamic "assume_role" {
-    for_each = var.assume_role_name != null ? [1] : []
+    for_each = var.aws_account != null && var.assume_role_name != null ? ["arn:aws:iam::${var.aws_account}:role/${var.assume_role_name}"] : []
     content {
-      role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.assume_role_name}"
+      role_arn = assume_role.value
     }
   }
+}
 
-  default_tags {
-    tags = merge(
-      {
-        Terraform   = "true"
-        Environment = var.environment
-        RequestedBy = "andreyv@terasky.com"
-        Owner       = "CloudPlatform"
-        Expiration  = "XXXXXXXXXX"
-        MAP_ID      = "XXXXXXXXXX"
-        Created_By  = "andreyv@terasky.com"
-        Project     = "AWS_LZ_Blueprint+PRESK"
-      },
-      #      var.map_server_id != null ? { map-migrated = var.map_server_id } : {}
-    )
+# An aliased provider for the central Networking account.
+# This provider will assume a role in that account to create the workload VPCs.
+provider "aws" {
+  alias  = "networking"
+  region = var.aws_region
+
+  dynamic "assume_role" {
+    for_each = var.aws_account != null && var.assume_role_name != null ? ["arn:aws:iam::${var.networking_account_id}:role/${var.assume_role_name}"] : []
+    content {
+      role_arn = assume_role.value
+    }
+  }
+}
+
+# An aliased provider for the central Logging account.
+# This provider will assume a role in that account to create the workload VPCs.
+provider "aws" {
+  alias  = "logging"
+  region = var.aws_region
+
+  dynamic "assume_role" {
+    for_each = var.logging_account_id != null && var.assume_role_name != null ? ["arn:aws:iam::${var.logging_account_id}:role/${var.assume_role_name}"] : []
+    content {
+      role_arn = assume_role.value
+    }
   }
 }

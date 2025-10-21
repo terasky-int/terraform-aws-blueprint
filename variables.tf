@@ -8,7 +8,7 @@ variable "environment" {
   type        = string
 
   validation {
-    condition     = contains(["dev", "test", "poc", "blueprint", "prod", "Shared-Services"], var.environment)
+    condition     = contains(["dev", "test", "poc", "blueprint", "prod", "Shared-Services", "Root"], var.environment)
     error_message = "The value for \"environment\" must be one of the following: \"dev\"/\"test\"/\"poc\"/\"prod\"/\"shared-services\"/ (case-sensitive)"
   }
 }
@@ -18,10 +18,37 @@ variable "account_name" {
   type        = string
 }
 
+variable "aws_account" {
+  description = "AWS account ID to assume the IAM role in"
+  type        = string
+}
+
+variable "networking_account_id" {
+  description = "The AWS Account ID of the central networking account where workload VPCs will be created."
+  type        = string
+}
+
+variable "logging_account_id" {
+  description = "The AWS Account ID of the central logging account where workload VPCs will be created."
+  type        = string
+}
+
 variable "assume_role_name" {
   description = "ARN of an IAM Role to assume"
   type        = string
   default     = "TerraformExecutionRole"
+}
+
+variable "enable_flow_log" {
+  description = "Whether or not to enable VPC Flow Logs"
+  default     = false
+  type        = bool
+}
+
+variable "s3_bucket_name" {
+  description = "Central S3 for all network logs usch as vpc flow logs, aws network firewall logs and etc"
+  type        = string
+  default     = ""
 }
 
 # --- VPC CIDR Blocks ---
@@ -170,14 +197,28 @@ variable "firewall_tools_tgw_subnets_cidr" {
 }
 
 # --- Workload VPCs ---
+# variable "workload_vpcs" {
+#   description = "A map of workload VPCs to create. Each object contains the configuration for a single VPC."
+#   type = map(object({
+#     name                 = string
+#     cidr                 = string
+#     public_subnets_cidr  = list(string)
+#     private_subnets_cidr = list(string)
+#     tgw_subnets_cidr     = list(string)
+#   }))
+#   default = {}
+# }
+
 variable "workload_vpcs" {
-  description = "A map of workload VPCs to create. Each object contains the configuration for a single VPC."
+  description = "A map of objects defining the workload VPCs to create and share."
   type = map(object({
-    name                 = string
-    cidr                 = string
-    public_subnets_cidr  = list(string)
-    private_subnets_cidr = list(string)
-    tgw_subnets_cidr     = list(string)
+    name                   = string
+    environment            = string # e.g., "dev", "prod"
+    cidr                   = string
+    public_subnets_cidr    = list(string)
+    private_subnets_cidr   = list(string)
+    tgw_subnets_cidr       = list(string)
+    share_with_account_ids = list(string)
   }))
   default = {}
 }
