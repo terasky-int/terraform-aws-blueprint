@@ -196,19 +196,6 @@ variable "firewall_tools_tgw_subnets_cidr" {
   type        = list(string)
 }
 
-# --- Workload VPCs ---
-# variable "workload_vpcs" {
-#   description = "A map of workload VPCs to create. Each object contains the configuration for a single VPC."
-#   type = map(object({
-#     name                 = string
-#     cidr                 = string
-#     public_subnets_cidr  = list(string)
-#     private_subnets_cidr = list(string)
-#     tgw_subnets_cidr     = list(string)
-#   }))
-#   default = {}
-# }
-
 variable "workload_vpcs" {
   description = "A map of objects defining the workload VPCs to create and share."
   type = map(object({
