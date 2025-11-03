@@ -32,6 +32,7 @@ This project creates two main components:
   - Copy terraform.tfvars.example to terraform.tfvars.
   - Fill out all the required variables in terraform.tfvars. Pay close attention to:
     - assume_role_name: The name of the IAM role Terraform will use.
+    - networking_account_id: The ID of your dedicated networking account.
     - logging_account_id: The ID of your dedicated logging account.
     - All VPC and subnet CIDR blocks.
     - workload_vpcs: Define all the application VPCs you want to create here.
