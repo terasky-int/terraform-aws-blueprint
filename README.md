@@ -36,12 +36,12 @@ This project creates two main components:
     - All VPC and subnet CIDR blocks.
     - workload_vpcs: Define all the application VPCs you want to create here.
 - **Deploy the Infrastructure:**
-- \# Initialize Terraform to download modules and providers.
+\# Initialize Terraform to download modules and providers.
     terraform init
-- \# Plan the deployment to see what will be created.
+\# Plan the deployment to see what will be created.
 
 terraform plan
-- \# Apply the configuration.
+\# Apply the configuration.
 
 terraform apply
 
