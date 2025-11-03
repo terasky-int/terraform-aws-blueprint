@@ -35,9 +35,9 @@ This project creates two main components:
     - logging_account_id: The ID of your dedicated logging account.
     - All VPC and subnet CIDR blocks.
     - workload_vpcs: Define all the application VPCs you want to create here.
-- **Deploy the Infrastructure:**
+- **Deploy the Infrastructure:**  
 \# Initialize Terraform to download modules and providers.  
-terraform init
+terraform init  
 \# Plan the deployment to see what will be created.  
 terraform plan  
 \# Apply the configuration. 
