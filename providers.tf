@@ -27,7 +27,7 @@ provider "aws" {
   region = var.aws_region
 
   dynamic "assume_role" {
-    for_each = var.aws_account != null && var.assume_role_name != null ? ["arn:aws:iam::${var.networking_account_id}:role/${var.assume_role_name}"] : []
+    for_each = var.networking_account_id != null && var.assume_role_name != null ? ["arn:aws:iam::${var.networking_account_id}:role/${var.assume_role_name}"] : []
     content {
       role_arn = assume_role.value
     }
