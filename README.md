@@ -78,8 +78,8 @@ These are the variables you must define in your terraform.tfvars file.
 | firewall_tools_tgw_subnets_cidr | List of CIDR blocks for TGW attachment subnets in the Firewall Tools VPC. | list(string) | n/a | **yes** |
 | firewall_tools_vpc_cidr | The CIDR block for the Firewall Tools VPC. | string | n/a | **yes** |
 | firewall_type | The type of firewall to deploy ('NETWORK_FIREWALL', 'GATEWAY_LOAD_BALANCER', or 'NONE'). | string | "NONE" | no  |
-| flow_log_account_id | The AWS Account ID where the central flow log S3 bucket resides. | string | null | no  |
-| flow_log_s3_bucket_name | The name of the central S3 bucket to send all VPC flow logs to. | string | null | no  |
+| logging_account_id | The AWS Account ID where the central flow log S3 bucket resides. | string | null | no  |
+| s3_bucket_name | The name of the central S3 bucket to send all VPC flow logs to. | string | null | no  |
 | fw_tools_vpc_name | The specific name for the Firewall Tools VPC. | string | "fw-tools" | no  |
 | gwlb_name | The name for the Gateway Load Balancer. | string | "gwlb" | no  |
 | ingress_public_subnets_cidr | List of CIDR blocks for public subnets in the Ingress VPC. | list(string) | n/a | **yes** |
