@@ -40,7 +40,7 @@ This project creates two main components:
 terraform init  
 \# Plan the deployment to see what will be created.  
 terraform plan  
-\# Apply the configuration. 
+\# Apply the configuration.  
 terraform apply
 
 **Inputs (Root Module Variables)**
