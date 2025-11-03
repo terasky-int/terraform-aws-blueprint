@@ -37,8 +37,7 @@ This project creates two main components:
     - workload_vpcs: Define all the application VPCs you want to create here.
 - **Deploy the Infrastructure:**
 - \# Initialize Terraform to download modules and providers.
-
-terraform init
+    terraform init
 - \# Plan the deployment to see what will be created.
 
 terraform plan
