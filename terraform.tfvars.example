@@ -1,0 +1,88 @@
+# # General Settings
+# aws_region            = "us-east-1"
+# aws_account           = "" # The ID of the root account
+# networking_account_id = "" # The ID of the dedicated networking account
+# logging_account_id    = "" # The ID of the dedicated logging account
+# environment           = "Root"
+# account_name          = "Root"
+# assume_role_name      = "TerraformExecutionRoleNetwork" # The NAME of the role, not the full ARN
+
+# # VPC CIDR Blocks
+# inspection_vpc_cidr     = "10.0.0.0/16"
+# egress_vpc_cidr         = "10.1.0.0/16"
+# ingress_vpc_cidr        = "10.2.0.0/16"
+# endpoint_vpc_cidr       = "10.3.0.0/16"
+# firewall_tools_vpc_cidr = "10.4.0.0/16"
+
+# # Inspection VPC Settings
+# create_inspection     = true
+# inspection_vpc_name   = "inspection"
+# public_subnets_cidr   = ["10.0.0.0/24", "10.0.1.0/24"]
+# private_subnets_cidr  = ["10.0.2.0/24", "10.0.3.0/24"]
+# tgw_subnets_cidr      = ["10.0.4.0/24", "10.0.5.0/24"]
+# firewall_subnets_cidr = ["10.0.6.0/24", "10.0.7.0/24"]
+
+# # Egress VPC Settings
+# create_egress_vpc          = true
+# egress_vpc_name            = "egress"
+# egress_public_subnets_cidr = ["10.1.0.0/24", "10.1.1.0/24"]
+# egress_tgw_subnets_cidr    = ["10.1.2.0/24", "10.1.3.0/24"]
+
+# # Ingress VPC Settings
+# create_ingress_vpc          = true
+# ingress_vpc_name            = "ingress"
+# ingress_public_subnets_cidr = ["10.2.0.0/24", "10.2.1.0/24"]
+# ingress_tgw_subnets_cidr    = ["10.2.2.0/24", "10.2.3.0/24"]
+
+# # Endpoint VPC Settings
+# create_endpoint_vpc          = true
+# endpoint_vpc_name            = "endpoint"
+# endpoint_public_subnets_cidr = ["10.3.0.0/24", "10.3.1.0/24"]
+# endpoint_tgw_subnets_cidr    = ["10.3.2.0/24", "10.3.3.0/24"]
+
+# # Firewall Tools VPC Settings
+# create_firewall_tools_vpc          = false
+# fw_tools_vpc_name                  = "fw-tools"
+# firewall_tools_public_subnets_cidr = ["10.4.0.0/24", "10.4.1.0/24"]
+# firewall_tools_tgw_subnets_cidr    = ["10.4.2.0/24", "10.4.3.0/24"]
+
+# # --- Workload VPC Definitions ---
+# # Each key represents a unique workload VPC to be created in the Networking Account.
+# workload_vpcs = {
+#   "development-workload" = {
+#     name                   = "dev-workload-vpc"
+#     environment            = "dev" # This tag drives the sharing
+#     cidr                   = "10.10.0.0/16"
+#     public_subnets_cidr    = ["10.10.0.0/24"]
+#     private_subnets_cidr   = ["10.10.1.0/24"]
+#     tgw_subnets_cidr       = ["10.10.2.0/24"]
+#     share_with_account_ids = ["000182341209"] # <-- Share "dev" VPC with these accounts
+#   },
+#   "production-workload" = {
+#     name                   = "prod-workload-vpc"
+#     environment            = "prod" # This tag drives the sharing
+#     cidr                   = "10.20.0.0/16"
+#     public_subnets_cidr    = ["10.20.0.0/24"]
+#     private_subnets_cidr   = ["10.20.1.0/24"]
+#     tgw_subnets_cidr       = ["10.20.2.0/24"]
+#     share_with_account_ids = ["113265635309"] # <-- Share "prod" VPC with this account
+#   }
+# }
+
+# # TGW Settings
+# create_tgw = false
+# tgw_asn    = 64512
+
+# # Firewall Settings
+# firewall_type = "NONE" # Can be "NETWORK_FIREWALL", "GATEWAY_LOAD_BALANCER", or "NONE"
+# gwlb_name     = "inspection"
+
+# # S2S VPN Settings
+# create_s2s_vpn      = false
+# customer_gateway_ip = "1.2.3.4"
+# customer_bgp_asn    = 65001
+
+# # Route 53 Settings
+# enable_hybrid_dns     = false
+# on_prem_domain_name   = "internal.example.com"
+# on_prem_dns_server_ip = "192.168.1.10"
