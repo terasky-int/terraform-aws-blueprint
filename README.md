@@ -53,6 +53,7 @@ These are the variables you must define in your terraform.tfvars file.
 | account_name | The name of the AWS account. | string | n/a | **yes** |
 | assume_role_name | The name of the IAM role to assume for deploying resources. | string | n/a | **yes** |
 | aws_region | The AWS region where resources will be created. | string | n/a | **yes** |
+| networking_account_id | The AWS Account ID of the central networking account where workload VPCs will be created. | string | n/a | **yes** |
 | create_endpoint_vpc | Boolean flag to create the Endpoint VPC. | bool | true | no  |
 | create_egress_vpc | Boolean flag to create the Egress VPC. | bool | true | no  |
 | create_firewall_tools_vpc | Boolean flag to create the Firewall Tools VPC. | bool | true | no  |
