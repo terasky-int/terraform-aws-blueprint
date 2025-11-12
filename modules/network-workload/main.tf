@@ -16,13 +16,16 @@ module "workload_vpc" {
   name = "${var.environment}-${var.account_name}-${var.workload_vpc_name}-VPC"
   cidr = var.workload_vpc_cidr
 
-  azs             = slice(data.aws_availability_zones.available.names, 0, length(var.workload_public_subnets_cidr))
+  azs             = slice(data.aws_availability_zones.available.names, 0, length(var.workload_private_subnets_cidr))
   public_subnets  = var.workload_public_subnets_cidr
   private_subnets = var.workload_private_subnets_cidr
   # Using the 'database' subnets input for TGW attachments as it creates dedicated route tables
   database_subnets = var.workload_tgw_subnets_cidr
 
-  enable_nat_gateway   = true
+  # If public subnets are provided, enable NAT gateways.
+  enable_nat_gateway = length(var.workload_public_subnets_cidr) > 0
+  # Create a NAT gateway in each AZ that has a public subnet.
+  one_nat_gateway_per_az = length(var.workload_public_subnets_cidr) > 0
   single_nat_gateway   = false # Create NATs in each AZ for high availability
   enable_dns_hostnames = true
 
