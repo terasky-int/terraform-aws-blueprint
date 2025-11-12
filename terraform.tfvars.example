@@ -6,6 +6,7 @@
 # environment           = "Root"
 # account_name          = "Root"
 # assume_role_name      = "TerraformExecutionRoleNetwork" # The NAME of the role, not the full ARN
+# enable_flow_log       = false
 
 # # VPC CIDR Blocks
 # inspection_vpc_cidr     = "10.0.0.0/16"
