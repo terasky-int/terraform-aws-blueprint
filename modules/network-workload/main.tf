@@ -16,7 +16,8 @@ module "workload_vpc" {
   name = "${var.environment}-${var.account_name}-${var.workload_vpc_name}-VPC"
   cidr = var.workload_vpc_cidr
 
-  azs             = slice(data.aws_availability_zones.available.names, 0, length(var.workload_private_subnets_cidr))
+  # azs             = slice(data.aws_availability_zones.available.names, 0, length(var.workload_private_subnets_cidr))
+  azs  = var.availability_zones
   public_subnets  = var.workload_public_subnets_cidr
   private_subnets = var.workload_private_subnets_cidr
   # Using the 'database' subnets input for TGW attachments as it creates dedicated route tables

@@ -8,6 +8,11 @@ variable "account_name" {
   type        = string
 }
 
+variable "availability_zones" {
+  description = "A list of availability zones in the current region."
+  type        = list(string)
+}
+
 variable "enable_flow_log" {
   description = "Whether or not to enable VPC Flow Logs"
   type        = bool

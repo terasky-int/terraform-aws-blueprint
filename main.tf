@@ -1,3 +1,8 @@
+data "aws_availability_zones" "available" {
+  provider = aws.networking
+  state    = "available"
+}
+
 module "network_hub" {
   source = "./modules/network-hub"
 
@@ -7,12 +12,12 @@ module "network_hub" {
   }
 
   # General Settings
-  aws_region       = var.aws_region
-  environment      = var.environment
-  account_name     = var.account_name
-  assume_role_name = var.assume_role_name
-  enable_flow_log  = var.enable_flow_log
-
+  aws_region         = var.aws_region
+  environment        = var.environment
+  account_name       = var.account_name
+  assume_role_name   = var.assume_role_name
+  enable_flow_log    = var.enable_flow_log
+  
   # VPC CIDR Blocks
   inspection_vpc_cidr     = var.inspection_vpc_cidr
   egress_vpc_cidr         = var.egress_vpc_cidr
@@ -96,9 +101,10 @@ module "network_workload" {
   }
 
   # General Settings
-  environment     = each.value.environment
-  account_name    = var.account_name # The "owner" account is still the hub
-  enable_flow_log = var.enable_flow_log
+  environment        = each.value.environment
+  account_name       = var.account_name # The "owner" account is still the hub
+  enable_flow_log    = var.enable_flow_log
+  availability_zones = data.aws_availability_zones.available.names
 
   # VPC Settings from the map
   workload_vpc_name             = each.value.name
