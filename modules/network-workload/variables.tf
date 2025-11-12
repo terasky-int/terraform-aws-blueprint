@@ -66,3 +66,9 @@ variable "share_with_account_ids" {
   type        = list(string)
   default     = []
 }
+
+# --- TGW ---
+variable "create_tgw" {
+  description = "Whether to create the Transit Gateway."
+  type        = bool
+}

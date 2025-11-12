@@ -44,7 +44,7 @@ module "workload_vpc" {
 # --------------------------------------------------------------------------------------------------
 resource "aws_ec2_transit_gateway_vpc_attachment" "workload" {
   # FIX: Only create the attachment if a valid TGW ID is provided.
-  count = var.tgw_id != null ? 1 : 0
+  count = var.create_tgw != null ? 1 : 0
 
   vpc_id     = module.workload_vpc.vpc_id
   subnet_ids = module.workload_vpc.database_subnets
@@ -61,12 +61,31 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "workload" {
 
 resource "aws_ec2_transit_gateway_route_table_association" "workload" {
   # FIX: Only create the association if the attachment is also created.
-  count = var.tgw_id != null ? 1 : 0
+  count = var.create_tgw != null ? 1 : 0
 
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.workload[0].id
   transit_gateway_route_table_id = var.spoke_tgw_route_table_id
 
   depends_on = [ aws_ec2_transit_gateway_vpc_attachment.workload ]
+}
+
+# --------------------------------------------------------------------------------------------------
+# Default Route for Private-Only VPCs
+# --------------------------------------------------------------------------------------------------
+resource "aws_route" "private_to_tgw" {
+  # Create this route only if:
+  # 1. A TGW attachment is being created (var.create_tgw)
+  # 2. This is a private-only VPC (no public subnets)
+  # 3. There are private subnets to add the route to
+  count = var.create_tgw && length(var.workload_public_subnets_cidr) == 0 && length(module.workload_vpc.private_subnets) > 0 ? length(module.workload_vpc.private_route_table_ids) : 0
+
+  route_table_id         = module.workload_vpc.private_route_table_ids[count.index]
+  destination_cidr_block = "0.0.0.0/0"
+  transit_gateway_id     = var.tgw_id
+
+  depends_on = [
+    aws_ec2_transit_gateway_vpc_attachment.workload
+  ]
 }
 
 # --------------------------------------------------------------------------------------------------

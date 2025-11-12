@@ -114,6 +114,7 @@ module "network_workload" {
   workload_tgw_subnets_cidr     = each.value.tgw_subnets_cidr
 
   # TGW Attachment & VPC Sharing Settings
+  create_tgw               = var.create_tgw
   tgw_id                   = var.create_tgw ? module.network_hub.tgw_id : null
   spoke_tgw_route_table_id = var.create_tgw ? module.network_hub.spoke_tgw_route_table_id : null
   share_with_account_ids   = each.value.share_with_account_ids
