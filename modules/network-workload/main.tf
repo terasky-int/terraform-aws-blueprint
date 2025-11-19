@@ -44,7 +44,7 @@ module "workload_vpc" {
 # --------------------------------------------------------------------------------------------------
 resource "aws_ec2_transit_gateway_vpc_attachment" "workload" {
   # FIX: Only create the attachment if a valid TGW ID is provided.
-  count = var.create_tgw != null ? 1 : 0
+  count = var.create_tgw != false ? 1 : 0
 
   vpc_id     = module.workload_vpc.vpc_id
   subnet_ids = module.workload_vpc.database_subnets
@@ -61,7 +61,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "workload" {
 
 resource "aws_ec2_transit_gateway_route_table_association" "workload" {
   # FIX: Only create the association if the attachment is also created.
-  count = var.create_tgw != null ? 1 : 0
+  count = var.create_tgw != false ? 1 : 0
 
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.workload[0].id
   transit_gateway_route_table_id = var.spoke_tgw_route_table_id
