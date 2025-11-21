@@ -26,8 +26,8 @@ module "workload_vpc" {
   # If public subnets are provided, enable NAT gateways.
   enable_nat_gateway = length(var.workload_public_subnets_cidr) > 0
   # Create a NAT gateway in each AZ that has a public subnet.
-  one_nat_gateway_per_az = length(var.workload_public_subnets_cidr) > 0
-  single_nat_gateway   = false # Create NATs in each AZ for high availability
+  # one_nat_gateway_per_az = length(var.workload_public_subnets_cidr) > 0
+  single_nat_gateway = length(var.workload_public_subnets_cidr) == 1
   enable_dns_hostnames = true
 
   tags                 = { Terraform = "true", Environment = "workload" }
