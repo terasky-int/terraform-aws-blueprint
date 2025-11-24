@@ -91,6 +91,7 @@ variable "inspection_vpc_name" {
 variable "public_subnets_cidr" {
   description = "List of public subnet CIDR blocks for the Inspection VPC."
   type        = list(string)
+  default     = []
 }
 
 variable "private_subnets_cidr" {

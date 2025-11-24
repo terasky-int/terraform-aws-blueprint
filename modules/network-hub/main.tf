@@ -34,7 +34,8 @@ module "inspection_vpc" {
   name = "${var.environment}-${var.account_name}-${var.inspection_vpc_name}-VPC"
   cidr = var.inspection_vpc_cidr
 
-  azs              = slice(data.aws_availability_zones.available.names, 0, length(var.public_subnets_cidr))
+  # azs              = slice(data.aws_availability_zones.available.names, 0, length(var.public_subnets_cidr))
+  azs              = data.aws_availability_zones.available.names
   private_subnets  = var.private_subnets_cidr
   public_subnets   = var.public_subnets_cidr
   database_subnets = var.tgw_subnets_cidr
